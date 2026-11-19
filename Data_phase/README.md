@@ -1,6 +1,27 @@
 # Data Phase: MGB-3 Setup
 
-This folder contains the MGB-3 data preparation scripts and the Conda environment definition. The raw dataset and generated audio/reports are kept locally and are not stored in Git.
+This phase contains reusable data-preparation scripts, documentation, and the Conda environment file. The folder skeleton is tracked in Git using `.gitkeep` placeholders. Dataset files and generated CSV reports remain local and are ignored by Git.
+
+## Project structure
+
+```text
+Data_phase/
+├── configs/                 # Dataset and pipeline configuration
+├── data/
+│   ├── manifests/           # Dataset manifests and indexes
+│   ├── raw/                 # Original downloaded datasets (local only)
+│   ├── interim/             # Extracted/validated working data (local only)
+│   └── processed/           # Final model-ready data (local only)
+├── docs/                    # Data notes and decisions
+├── notebooks/               # Exploration notebooks
+├── reports/                 # Generated reports (local CSVs ignored)
+├── scripts/                 # Command-line preparation scripts
+└── src/
+    ├── adapters/            # Dataset-specific loading/adaptation code
+    └── common/              # Shared utilities
+```
+
+The `.gitkeep` files preserve empty folders when teammates clone the repository. Running the data scripts does **not** create this entire skeleton; it creates or fills only the data/output folders it needs.
 
 ## 1. Get the project
 
@@ -80,6 +101,7 @@ The scripts extract embedded WAV audio and pair it with the original sentence in
 
 - Raw downloads: `Data_phase/data/raw/`
 - Extracted/interim audio and manifest: `Data_phase/data/interim/`
+- Processed outputs: `Data_phase/data/processed/`
 - Generated CSV reports: `Data_phase/reports/`
 
-These paths are ignored by Git. Keep the original data and transcripts unchanged; document any later preprocessing decisions before creating a normalized dataset.
+The `.gitkeep` placeholders in data folders are tracked, but their dataset contents are ignored. Keep the original data and transcripts unchanged; document any later preprocessing decisions before creating a normalized dataset.

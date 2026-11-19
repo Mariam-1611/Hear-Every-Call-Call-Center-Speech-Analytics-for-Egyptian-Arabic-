@@ -1,4 +1,10 @@
-Data_phase/data/raw/
-Data_phase/data/interim/
-Data_phase/data/processed/
-Data_phase/reports/*.csv
+# Dataset contents stay local; track only the empty folder placeholders.
+/Data_phase/data/raw/*
+!/Data_phase/data/raw/.gitkeep
+/Data_phase/data/interim/*
+!/Data_phase/data/interim/.gitkeep
+/Data_phase/data/processed/*
+!/Data_phase/data/processed/.gitkeep
+
+# Generated dataset reports may include transcript text.
+/Data_phase/reports/*.csv
