@@ -1,0 +1,4 @@
+Data_phase/data/raw/
+Data_phase/data/interim/
+Data_phase/data/processed/
+Data_phase/reports/*.csv
