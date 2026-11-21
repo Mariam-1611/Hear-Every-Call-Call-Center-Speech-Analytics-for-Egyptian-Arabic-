@@ -8,3 +8,9 @@
 
 # Generated dataset reports may include transcript text.
 /Data_phase/reports/*.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
