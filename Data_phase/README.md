@@ -105,3 +105,25 @@ The scripts extract embedded WAV audio and pair it with the original sentence in
 - Generated CSV reports: `Data_phase/reports/`
 
 The `.gitkeep` placeholders in data folders are tracked, but their dataset contents are ignored. Keep the original data and transcripts unchanged; document any later preprocessing decisions before creating a normalized dataset.
+
+## 5. Normalize transcripts and generate model-ready splits
+
+After reviewing the reports, run the normalization and dataset splitting pipeline:
+
+```powershell
+# 1. Verify normalization rules against test samples
+python Data_phase\scripts\test_normalizer.py
+
+# 2. Filter inaudibles ('غير واضح'), clean pauses, and normalize transcripts
+python Data_phase\scripts\process_mgb3.py
+
+# 3. Generate speaker-disjoint splits (Train / Val / Test)
+python Data_phase\scripts\create_splits.py
+```
+
+### Preprocessing decisions:
+- **Inaudible segment exclusion**: 10 records containing `غير واضح` were filtered out and logged to `reports/mgb3_dropped_records.csv` to prevent acoustic misalignment.
+- **Acoustic pause handling**: Multi-dot ellipses (`...`, `…`) indicating hesitation or pauses were stripped from transcripts.
+- **Arabic-English code-switching**: All Latin characters (`a-z`) were preserved in lowercase to support Egyptian call center vocabulary.
+- **Arabic orthographic normalization**: Unified Alef variants (`إ, أ, آ, ٱ -> ا`), Taa Marbuta (`ة -> ه`), and Alef Maqsura (`ى -> ي`); stripped diacritics (Tashkeel) and Tatweel (`ـ`).
+- **Data leakage prevention**: Created speaker-disjoint splits (80% Train / 10% Val / 10% Test) using `GroupShuffleSplit` on show/speaker IDs. Split manifests are saved to `data/manifests/`.
