@@ -1,0 +1,11 @@
+record_id,decision,replacement,reason
+mgb3_000022,replace,يعني ايه يعني ايه,Manually reviewed: annotation replaced with heard words
+mgb3_000791,replace,كدة,Manually reviewed: annotation replaced with heard word
+mgb3_000801,replace,يشتغلوا بأديهم,Manually reviewed: annotation replaced with heard words
+mgb3_000851,exclude,,Manually reviewed: unintelligible annotation; excluded from clean ASR set
+mgb3_000856,exclude,,Manually reviewed: unintelligible annotation; excluded from clean ASR set
+mgb3_001018,exclude,,Manually reviewed: unintelligible annotation; excluded from clean ASR set
+mgb3_001024,replace,فا انا بعتبر,Manually reviewed: annotation replaced with heard words
+mgb3_001032,exclude,,User chose to hold out uncertain record from clean ASR set
+mgb3_001086,replace,مصممة,Manually reviewed: annotation replaced with heard word
+mgb3_001091,exclude,,Manually reviewed: unintelligible annotation; excluded from clean ASR set

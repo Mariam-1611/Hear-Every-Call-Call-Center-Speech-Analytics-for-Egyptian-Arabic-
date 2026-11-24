@@ -1,89 +1,70 @@
-"""
-Text Normalization Module for Egyptian Arabic and English Code-Switching.
+"""Text normalization utilities for Egyptian Arabic and English code-switching.
 
-Key Capabilities:
-1. Inaudible detection: Flags/excludes non-lexical audio annotations ('غير واضح').
-2. Acoustic hesitation removal: Strips repeated dots/ellipses ('...', '…') representing pauses.
-3. Arabic orthographic normalization: Unifies Alef variants, Taa Marbuta, and Yaa.
-4. Diacritic removal: Strips all Arabic Tashkeel marks and Tatweel (kashida).
-5. Code-switching preservation: Retains all ASCII Latin characters (a-z) in lowercase.
-6. Numeral standardization: Maps Eastern Arabic-Indic digits (٠-٩) to Western Arabic digits (0-9).
+This module changes transcript text only. It never decides that a record is
+unintelligible or excludes it; those record-level decisions are explicit and
+manual in configs/mgb3_manual_decisions.csv.
 """
 
 import re
 import unicodedata
 
-# Matches all Arabic diacritics (Tashkeel: Fathatan, Dammatan, Kasratan, Fatha,
-# Damma, Kasra, Shadda, Sukun, Superscript Alef) and Tatweel (ـ)
+# Arabic diacritics (Tashkeel), superscript alef, and Tatweel (kashida).
 ARABIC_DIACRITICS = re.compile(r"[\u064B-\u0652\u0670\u0640]")
 
-# Mapping table to convert Eastern Arabic-Indic digits (٠-٩) to standard digits (0-9)
+# Eastern Arabic-Indic digits ٠-٩ to Western digits 0-9.
 ARABIC_INDIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
-# Pattern matching inaudible / unintelligible transcriber markers
-INAUDIBLE_PATTERNS = re.compile(r"(_?غير\s+واضح|\[غير واضح\]|\(غير واضح\))")
 
+def normalize_text(
+    text: str,
+    *,
+    remove_ellipses: bool = False,
+    normalize_taa_marbuta: bool = False,
+    normalize_alef_maqsura: bool = False,
+) -> str:
+    """Create a derived text view using explicitly selected normalization rules.
 
-def contains_inaudible_tag(text: str) -> bool:
-    """
-    Check if a transcript contains an inaudible marker ('غير واضح').
-    Used to filter out corrupted audio-text alignment records before training.
-    """
-    if not text or not isinstance(text, str):
-        return False
-    return bool(INAUDIBLE_PATTERNS.search(text))
-
-
-def normalize_text(text: str) -> str:
-    """
-    Apply model-agnostic text normalization for bilingual Egyptian Arabic / English speech:
-    - Removes non-lexical acoustic pauses (...).
-    - Unifies Arabic character variants.
-    - Preserves English code-switching vocabulary in lowercase.
-    - Strips noisy punctuation and special characters.
+    Defaults are conservative: ellipses, ة, and ى are retained. The source
+    transcript is never modified. Optional rules allow later comparisons.
     """
     if not text or not isinstance(text, str):
         return ""
 
     text = text.strip()
-
-    # Step 1: Standardize Eastern Arabic-Indic numerals to 0-9
     text = text.translate(ARABIC_INDIC_DIGITS)
 
-    # Step 2: Replace multi-dot ellipses and pauses with whitespace
-    text = re.sub(r"\.{2,}", " ", text)
-    text = text.replace("…", " ")
+    # Ellipses may mark pauses or incomplete speech. Keep them until reviewed.
+    if remove_ellipses:
+        text = re.sub(r"\.{2,}", " ", text)
+        text = text.replace("…", " ")
 
-    # Step 3: Remove brackets, quotes, hyphens, and decorative symbols
+    # Remove brackets, quotes, hyphens, and decorative symbols.
     text = re.sub(r"[_\(\)\[\]\{\}\<\>\"\'«»/\\~#@\$\%\^\&\*\+\=\|\-]", " ", text)
-
-    # Step 4: Strip Arabic diacritics (Tashkeel) and Tatweel
     text = ARABIC_DIACRITICS.sub("", text)
 
-    # Step 5: Unify Arabic letter variants (Orthographic normalization)
-    text = re.sub(r"[إأآٱ]", "ا", text)  # Unify all Alef variants to bare Alef
-    text = re.sub(r"ة\b", "ه", text)     # Unify word-final Taa Marbuta to Haa
-    text = re.sub(r"ى\b", "ي", text)     # Unify Alef Maqsura to Yaa
+    # Normalize Alef variants in both profiles. Other spelling changes are
+    # opt-in because they can affect training and WER.
+    text = re.sub(r"[إأآٱ]", "ا", text)
+    if normalize_taa_marbuta:
+        text = re.sub(r"ة\b", "ه", text)
+    if normalize_alef_maqsura:
+        text = re.sub(r"ى\b", "ي", text)
 
-    # Step 6: Character-level filtering:
-    # Retain Arabic characters, ASCII Latin characters (lowercased), digits, and spaces
     cleaned_chars = []
     for char in text:
         if char.isalpha() and "ARABIC" in unicodedata.name(char, ""):
             cleaned_chars.append(char)
         elif char.isascii() and char.isalpha():
-            cleaned_chars.append(char.lower()) # Enforce lowercase on English words
+            cleaned_chars.append(char.lower())
         elif char.isnumeric():
             cleaned_chars.append(char)
-        elif char.isspace() or char in [".", "،", "؟", "?"]:
-            # Convert single punctuation to space to keep clean lexical tokens
+        elif char == ".":
+            # Preserve periods/ellipses in the conservative profile. The
+            # aggressive profile removes multi-dot ellipses before this loop.
+            cleaned_chars.append(char)
+        elif char.isspace() or char in ["،", "؟", "?"]:
             cleaned_chars.append(" ")
         else:
             cleaned_chars.append(" ")
 
-    text = "".join(cleaned_chars)
-
-    # Step 7: Collapse redundant whitespace
-    text = re.sub(r"\s+", " ", text).strip()
-
-    return text
+    return re.sub(r"\s+", " ", "".join(cleaned_chars)).strip()

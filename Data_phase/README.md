@@ -114,16 +114,17 @@ After reviewing the reports, run the normalization and dataset splitting pipelin
 # 1. Verify normalization rules against test samples
 python Data_phase\scripts\test_normalizer.py
 
-# 2. Filter inaudibles ('غير واضح'), clean pauses, and normalize transcripts
+# 2. Apply record-specific review decisions and create transcript variants
 python Data_phase\scripts\process_mgb3.py
 
-# 3. Generate speaker-disjoint splits (Train / Val / Test)
+# 3. Generate source-disjoint splits (Train / Val / Test)
 python Data_phase\scripts\create_splits.py
 ```
 
 ### Preprocessing decisions:
-- **Inaudible segment exclusion**: 10 records containing `غير واضح` were filtered out and logged to `reports/mgb3_dropped_records.csv` to prevent acoustic misalignment.
-- **Acoustic pause handling**: Multi-dot ellipses (`...`, `…`) indicating hesitation or pauses were stripped from transcripts.
+- **Manual marker decisions**: `configs/mgb3_manual_decisions.csv` records the reviewed outcome for each of the 10 marker candidates. Five transcripts are corrected by replacing the annotation with the words heard; five records (including the uncertain one) are excluded from the clean ASR manifest. Original transcripts remain unchanged, and exclusions are logged to `reports/mgb3_dropped_records.csv`. The processing script validates that each current marker candidate has an explicit decision; it does not drop records by substring alone.
+- **Transcript variants**: The processed manifest preserves `raw_transcript` and `reviewed_transcript`, plus `normalized_conservative` and `normalized_aggressive` columns. Use the conservative column as the default until model evaluation supports another policy.
+- **Ellipsis review**: `reports/mgb3_ellipsis_inventory.csv` contains all records with `...` or `…`. `reports/mgb3_ellipsis_review.csv` contains a deterministic, 30-record sample balanced across visible marker patterns (seed 42); review the audio and fill `audio_review_category` (`punctuation_pause`, `missing_or_unintelligible_speech`, or `uncertain`) and `review_notes`. This sample checks how the transcript uses the symbol; it does not label all 677 records. Keep ellipses in the conservative text until the sample supports a policy. The aggressive view removes the marks only as a comparison.
 - **Arabic-English code-switching**: All Latin characters (`a-z`) were preserved in lowercase to support Egyptian call center vocabulary.
-- **Arabic orthographic normalization**: Unified Alef variants (`إ, أ, آ, ٱ -> ا`), Taa Marbuta (`ة -> ه`), and Alef Maqsura (`ى -> ي`); stripped diacritics (Tashkeel) and Tatweel (`ـ`).
-- **Data leakage prevention**: Created speaker-disjoint splits (80% Train / 10% Val / 10% Test) using `GroupShuffleSplit` on show/speaker IDs. Split manifests are saved to `data/manifests/`.
+- **Arabic orthographic normalization**: Both variants unify Alef forms and remove diacritics/Tatweel. The conservative variant retains `ة` and `ى`; the aggressive comparison variant maps `ة -> ه` and `ى -> ي`. Do not select the aggressive forms as final until their effect is measured.
+- **Source-group split**: `GroupShuffleSplit` keeps records sharing a filename-derived source ID (such as `comedy_78`) in one partition. The proportions are approximate because groups have different sizes. These IDs identify source recordings/programs; they are not verified speaker IDs, so the split must not be described as speaker-independent. Each split manifest includes a `source_group` column and is saved to `data/manifests/`.
