@@ -24,8 +24,9 @@ def normalize_text(
 ) -> str:
     """Create a derived text view using explicitly selected normalization rules.
 
-    Defaults are conservative: ellipses, ة, and ى are retained. The source
-    transcript is never modified. Optional rules allow later comparisons.
+    Defaults are conservative: ellipses, taa marbuta, and alef maqsura are
+    retained. The source transcript is never modified. Optional rules allow
+    later comparisons.
     """
     if not text or not isinstance(text, str):
         return ""

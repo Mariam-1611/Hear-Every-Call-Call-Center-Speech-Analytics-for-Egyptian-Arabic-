@@ -175,9 +175,15 @@ def main() -> None:
                     f"found {replacements}"
                 )
 
-        # Keep two derived text views so the impact of debated rules can be
-        # compared later. The conservative view retains ellipses, ة and ى.
+        # Keep distinct derived views so the effect of removing ellipses can be
+        # compared without also normalizing taa marbuta or alef maqsura.
         normalized_conservative = normalize_text(reviewed_text)
+        normalized_no_ellipses = normalize_text(
+            reviewed_text,
+            remove_ellipses=True,
+        )
+        # Retain this combined variant for the existing broad comparison only;
+        # it is not a controlled test of ellipsis removal by itself.
         normalized_aggressive = normalize_text(
             reviewed_text,
             remove_ellipses=True,
@@ -204,6 +210,7 @@ def main() -> None:
                 "raw_transcript": raw_text,
                 "reviewed_transcript": reviewed_text,
                 "normalized_conservative": normalized_conservative,
+                "normalized_no_ellipses": normalized_no_ellipses,
                 "normalized_aggressive": normalized_aggressive,
                 "source_shard": row.get("source_shard", ""),
                 "source_audio_filename": row.get("source_audio_filename", ""),
@@ -232,6 +239,7 @@ def main() -> None:
         "raw_transcript",
         "reviewed_transcript",
         "normalized_conservative",
+        "normalized_no_ellipses",
         "normalized_aggressive",
         "source_shard",
         "source_audio_filename",

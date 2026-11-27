@@ -8,6 +8,8 @@
 
 # Generated dataset reports may include transcript text.
 /Data_phase/reports/*.csv
+/Data_phase/reports/ellipsis_advisor_sample/
+/Data_phase/reports/ellipsis_advisor_sample.zip
 
 # Python cache
 __pycache__/

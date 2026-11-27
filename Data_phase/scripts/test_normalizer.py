@@ -15,6 +15,9 @@ def run_tests():
     assert normalize_text("خليني اسميها غير واضح") == "خليني اسميها غير واضح"
 
     # Optional aggressive rules make those choices explicit and comparable.
+    no_ellipses = normalize_text("... مدرسة فتى", remove_ellipses=True)
+    assert no_ellipses == "مدرسة فتى"
+
     aggressive = normalize_text(
         "... مدرسة فتى",
         remove_ellipses=True,
